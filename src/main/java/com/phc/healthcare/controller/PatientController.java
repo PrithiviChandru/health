@@ -34,4 +34,14 @@ public class PatientController {
     public ResponseEntity<BaseResponse> deletePatientById(@PathVariable Integer id) {
         return patientService.deletePatientById(id);
     }
+
+    @GetMapping("vaccinated")
+    public ResponseEntity<BaseResponse> vaccinated(@RequestParam("id") Integer id, @RequestParam("vaccineName") String vaccineName) {
+        return patientService.vaccinated(id, vaccineName);
+    }
+
+    @GetMapping("scheduler")
+    public ResponseEntity<BaseResponse> getScheduler() {
+        return patientService.getScheduler();
+    }
 }
