@@ -11,14 +11,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class PatientService {
@@ -184,6 +183,7 @@ public class PatientService {
         BaseResponse<Patient> br = new BaseResponse<>();
         Gson gson = new Gson();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
         try {
 
@@ -207,8 +207,8 @@ public class PatientService {
             String nextVaccine = vaccines[nextVaccineIndex];
 
             Instant instant = LocalDate.now().atStartOfDay(ZoneOffset.of("+05:30")).toInstant();
-            String pvAdministered = instant.atZone(ZoneId.of("+05:30")).format(formatter);
-            long pvAdministeredStamp = instant.toEpochMilli();
+            String previousAdministered = instant.atZone(ZoneId.of("+05:30")).format(formatter);
+            long previousAdministeredStamp = instant.toEpochMilli();
 
             Map<String, Boolean> vaccineStatus = (Map<String, Boolean>) gson.fromJson(patient.getVaccineStatus(), Object.class);
             if (vaccineStatus.get(vaccineName)) throw new IllegalArgumentException("Already vaccinated");
@@ -217,11 +217,15 @@ public class PatientService {
             patient.setVaccineStatus(gson.toJson(vaccineStatus));
             patient.setPreviousVaccine(vaccineName);
             patient.setNextVaccine(nextVaccine);
-            patient.setPreviousAdministration(pvAdministered);
+            patient.setPreviousAdministration(previousAdministered);
 
-            System.out.println(patient.getDob());
-            System.out.println(vaccineDays.get(nextVaccine));
+            LocalDate ld = LocalDate.parse(patient.getDob());
+            int plusDays = Integer.parseInt(vaccineDays.get(nextVaccine));
+            String nextAdministered = ld.plusDays(plusDays).toString();
+            long nextAdministeredStamp = sdf.parse(nextAdministered).getTime();
+            patient.setNextAdministration(nextAdministered);
 
+            patientDAO.save(patient);
             br.setApiStatus(true);
             br.setValue(patient);
 

@@ -44,4 +44,5 @@ public class PatientController {
     public ResponseEntity<BaseResponse> getScheduler() {
         return patientService.getScheduler();
     }
+
 }
