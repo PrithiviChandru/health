@@ -25,9 +25,13 @@ public class UserController {
         return userService.login(login);
     }
 
-    @GetMapping("users")
-    public ResponseEntity<BaseResponse> getAllUsers() {
-        return userService.getAllUsers();
+    @GetMapping("userIdByToken")
+    public ResponseEntity<String> userIdByToken(@RequestParam String token) {
+        return userService.userIdByToken(token);
     }
 
+    @GetMapping("isTokenValid")
+    public ResponseEntity isTokenValid(@RequestParam String token) {
+        return userService.isTokenValid(token);
+    }
 }

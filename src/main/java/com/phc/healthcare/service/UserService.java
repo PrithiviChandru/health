@@ -1,10 +1,8 @@
 package com.phc.healthcare.service;
 
 import com.phc.healthcare.dao.UserDAO;
-import com.phc.healthcare.model.BaseResponse;
-import com.phc.healthcare.model.Login;
-import com.phc.healthcare.model.User;
-import com.phc.healthcare.model.UserWrapper;
+import com.phc.healthcare.model.*;
+import com.phc.healthcare.utils.TokenManager;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -50,7 +48,6 @@ public class UserService {
         } catch (IllegalArgumentException e) {
             bR.setApiStatus(false);
             bR.setMessage(e.getMessage());
-            bR.setTrace(e.toString());
         } catch (Exception e) {
             bR.setApiStatus(false);
             bR.setMessage(e.getMessage());
@@ -65,7 +62,7 @@ public class UserService {
     public ResponseEntity<BaseResponse> login(Login login) {
 
         ResponseEntity<BaseResponse> response;
-        BaseResponse bR = new BaseResponse<>();
+        LoginResponse lR = new LoginResponse();
 
         try {
 
@@ -78,21 +75,23 @@ public class UserService {
             User dbUser = userDAO.findByEmail(email);
             if (null == dbUser) throw new IllegalArgumentException("User Not Found");
 
-            if (BCrypt.checkpw(password, dbUser.getPassword()))
-                bR.setApiStatus(true);
-            else
-                bR.setMessage("INVALID_CREDENTIALS");
+            if (BCrypt.checkpw(password, dbUser.getPassword())) {
+                lR.setApiStatus(true);
+                lR.setToken(TokenManager.generateAuthToken(dbUser.getEmail()));
+                lR.setUser(new UserWrapper(dbUser.getId(), dbUser.getEmail(), dbUser.getFirstName(), dbUser.getLastName(), dbUser.getPhone()));
+            } else {
+                throw new IllegalArgumentException("Incorrect Password");
+            }
 
         } catch (IllegalArgumentException e) {
-            bR.setApiStatus(false);
-            bR.setMessage(e.getMessage());
-            bR.setTrace(e.toString());
+            lR.setApiStatus(false);
+            lR.setMessage(e.getMessage());
         } catch (Exception e) {
-            bR.setApiStatus(false);
-            bR.setMessage(e.getMessage());
-            bR.setTrace(e.toString());
+            lR.setApiStatus(false);
+            lR.setMessage(e.getMessage());
+            lR.setTrace(e.toString());
         } finally {
-            response = new ResponseEntity<>(bR, HttpStatus.OK);
+            response = new ResponseEntity<>(lR, HttpStatus.OK);
         }
 
         return response;
@@ -121,6 +120,43 @@ public class UserService {
             bR.setTrace(e.toString());
         } finally {
             response = new ResponseEntity<>(bR, HttpStatus.OK);
+        }
+
+        return response;
+    }
+
+    public ResponseEntity<String> userIdByToken(String token) {
+
+        ResponseEntity<String> response;
+        String userId = "";
+
+        try {
+            userId = TokenManager.getUserIdFromToken(token);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            response = new ResponseEntity<>(userId, HttpStatus.OK);
+        }
+
+        return response;
+    }
+
+    public ResponseEntity isTokenValid(String token) {
+        ResponseEntity<String> response;
+        HttpStatus status = HttpStatus.ACCEPTED;
+
+        try {
+
+            if (TokenManager.isTokenValid(token))
+                status = HttpStatus.OK;
+            else
+                status = HttpStatus.UNAUTHORIZED;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            status = HttpStatus.INTERNAL_SERVER_ERROR;
+        } finally {
+            response = new ResponseEntity<>(status);
         }
 
         return response;
