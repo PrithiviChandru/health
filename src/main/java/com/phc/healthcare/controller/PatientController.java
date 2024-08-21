@@ -29,7 +29,7 @@ public class PatientController {
         }
     }
 
-    @GetMapping("patients")
+    @GetMapping("list")
     public ResponseEntity<PatientListResponse> getAllPatients(@RequestHeader(name = "TOKEN") String token) {
         if (TokenManager.isTokenValid(token)) return patientService.getAllPatients();
         else {
@@ -38,7 +38,7 @@ public class PatientController {
         }
     }
 
-    @GetMapping("patient/{id}")
+    @GetMapping("get/{id}")
     public ResponseEntity<BaseResponse> getPatientById(@RequestHeader(name = "TOKEN") String token, @PathVariable Integer id) {
         if (TokenManager.isTokenValid(token)) return patientService.getPatientById(id);
         else {
@@ -47,7 +47,7 @@ public class PatientController {
         }
     }
 
-    @DeleteMapping("patient/{id}")
+    @DeleteMapping("delete/{id}")
     public ResponseEntity<BaseResponse> deletePatientById(@RequestHeader(name = "TOKEN") String token, @PathVariable Integer id) {
         if (TokenManager.isTokenValid(token)) return patientService.deletePatientById(id);
         else {
